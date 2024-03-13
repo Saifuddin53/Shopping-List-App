@@ -40,8 +40,8 @@ fun ShoppingListUI() {
         verticalArrangement = Arrangement.Center
     ) {
 
-        val itemList by remember {
-            mutableStateOf(listOf<Item>())
+        val itemList = remember {
+            mutableListOf(listOf<Item>())
         }
 
         val showDialog = remember {
@@ -53,7 +53,7 @@ fun ShoppingListUI() {
         }
 
         var itemQuantity = remember {
-            mutableStateOf(0)
+            mutableStateOf("")
         }
 
 
@@ -78,7 +78,7 @@ fun ShoppingListUI() {
         }
 
         if(showDialog.value) {
-            AddItemDialog(showDialog)
+            AddItemDialog(showDialog, itemName, itemQuantity, itemList)
         }
 
     }
@@ -91,7 +91,8 @@ fun ShoppingListUI() {
 @Composable
 fun AddItemDialog(showDialog: MutableState<Boolean>,
                   itemName: MutableState<String>,
-                  itemQuantity: MutableState<Int>) {
+                  itemQuantity: MutableState<String>,
+                  itemList: MutableList<List<Item>>) {
 
     AlertDialog(
         onDismissRequest = { showDialog.value = false },
@@ -106,9 +107,12 @@ fun AddItemDialog(showDialog: MutableState<Boolean>,
                                   val newItem = Item(
                                       1,
                                       itemName.value,
-                                      itemQuantity.value,
-                                      showDialog.value
+                                      itemQuantity.value.toInt(),
+                                      false
                                   )
+                                  itemList.add(listOf(newItem))
+                                  itemName.value = ""
+                                  itemQuantity.value = ""
                               }
                     },
                 ) {
@@ -127,19 +131,15 @@ fun AddItemDialog(showDialog: MutableState<Boolean>,
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                OutlinedTextField(value = "",
-                    onValueChange = {
-                                    itemName.value = it
-                    },
+                OutlinedTextField(value = itemName.value,
+                    onValueChange = { itemName.value = it },
                     label = { Text(text = "Enter item name") }
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(value = "",
-                    onValueChange = {
-                                    itemQuantity.value = it.toInt()
-                    },
+                OutlinedTextField(value = itemQuantity.value,
+                    onValueChange = { itemQuantity.value = it },
                     label = { Text(text = "Enter quantity") }
                 )
             }
