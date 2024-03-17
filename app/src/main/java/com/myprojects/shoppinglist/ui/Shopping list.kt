@@ -25,8 +25,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,8 +44,8 @@ fun ShoppingListUI() {
         verticalArrangement = Arrangement.Center
     ) {
 
-        val itemList = remember {
-            mutableListOf(listOf<Item>())
+        var itemList by remember {
+            mutableStateOf(listOf<Item>())
         }
 
         val showDialog = remember {
@@ -74,7 +76,23 @@ fun ShoppingListUI() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            items(itemList) { 
+            items(itemList) {
+                item ->
+                if(item.isEditing){
+                    ItemEditor(item = item, onEditComplete = {
+                        editedName, editedQuantity ->
+                        itemList = itemList.map { it.copy(isEditing = false) }
+                        val editedItem = itemList.find { it.id == item.id}
+                        editedItem?.let {
+                            it.itemName = editedName
+                            it.quantity = editedQuantity
+                        }
+                    })
+                }else{
+                    ItemCard(item = item, onEditClick = {
+                        itemList.map { it.copy(isEditing = it.id == item.id) }
+                    }, onDeleteClick = {})
+                }
             }
         }
 
@@ -90,10 +108,12 @@ fun ShoppingListUI() {
 @OptIn(ExperimentalMaterial3Api::class)
 //@Preview(showBackground = true)
 @Composable
-fun AddItemDialog(showDialog: MutableState<Boolean>,
-                  itemName: MutableState<String>,
-                  itemQuantity: MutableState<String>,
-                  itemList: MutableList<List<Item>>) {
+fun AddItemDialog(
+    showDialog: MutableState<Boolean>,
+    itemName: MutableState<String>,
+    itemQuantity: MutableState<String>,
+    itemList: List<Item>
+) {
 
     AlertDialog(
         onDismissRequest = { showDialog.value = false },
@@ -111,7 +131,7 @@ fun AddItemDialog(showDialog: MutableState<Boolean>,
                                       itemQuantity.value.toInt(),
                                       false
                                   )
-                                  itemList.add(listOf(newItem))
+                                  itemList += newItem
                                   itemName.value = ""
                                   itemQuantity.value = ""
                               }
@@ -159,7 +179,8 @@ fun ItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .border(BorderStroke(3.dp, Color.Green),
+            .border(
+                BorderStroke(3.dp, Color.Green),
                 shape = RoundedCornerShape(20)
             )
     ) {
@@ -169,6 +190,38 @@ fun ItemCard(
         }
         IconButton(onClick = { onDeleteClick }) {
             Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete item")
+        }
+    }
+}
+
+
+@Composable
+fun ItemEditor(item: Item, onEditComplete: (String, Int) -> Unit) {
+
+    var itemNameEdit by remember {
+        mutableStateOf(item.itemName)
+    }
+
+    var itemQuantityEdit by remember {
+        mutableStateOf(item.quantity.toString())
+    }
+
+    Row {
+        Column {
+            OutlinedTextField(
+                value = itemNameEdit,
+                onValueChange = {itemNameEdit = it},
+                Modifier.border(0.dp, Color.Green),
+                )
+            OutlinedTextField(
+                value = itemQuantityEdit,
+                onValueChange = {itemQuantityEdit = it},
+                Modifier.border(0.dp, Color.Green),
+            )
+        }
+
+        IconButton(onClick = { /*TODO*/ }) {
+            Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit button")
         }
     }
 }
