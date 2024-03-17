@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import com.myprojects.shoppinglist.data.Item
 
 
-//@Preview
 @Composable
 fun ShoppingListUI() {
     Column(
@@ -91,81 +90,68 @@ fun ShoppingListUI() {
                 }else{
                     ItemCard(item = item, onEditClick = {
                         itemList.map { it.copy(isEditing = it.id == item.id) }
-                    }, onDeleteClick = {})
+                    }, onDeleteClick = {
+                        itemList -= item
+                    })
                 }
             }
         }
 
         if(showDialog.value) {
-            AddItemDialog(showDialog, itemName, itemQuantity, itemList)
-        }
+            AlertDialog(
+                onDismissRequest = { showDialog.value = false },
+                confirmButton = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = {
+                                if(itemName.value.isNotBlank()) {
+                                    val newItem = Item(
+                                        1,
+                                        itemName.value,
+                                        itemQuantity.value.toInt(),
+                                        false
+                                    )
+                                    itemList += newItem
+                                    itemName.value = ""
+                                    itemQuantity.value = ""
+                                    showDialog.value = false
+                                }
+                            },
+                        ) {
+                            Text(text = "Add")
+                        }
 
+                        Button(
+                            onClick = { showDialog.value = false },
+                        ) {
+                            Text(text = "Cancel")
+                        }
+                    }
+                },
+                title = { Text(text = "Add Shopping item")},
+                text = {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        OutlinedTextField(value = itemName.value,
+                            onValueChange = { itemName.value = it },
+                            label = { Text(text = "Enter item name") }
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(value = itemQuantity.value,
+                            onValueChange = { itemQuantity.value = it },
+                            label = { Text(text = "Enter quantity") }
+                        )
+                    }
+                }
+            )
+        }
     }
-
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-//@Preview(showBackground = true)
-@Composable
-fun AddItemDialog(
-    showDialog: MutableState<Boolean>,
-    itemName: MutableState<String>,
-    itemQuantity: MutableState<String>,
-    itemList: List<Item>
-) {
-
-    AlertDialog(
-        onDismissRequest = { showDialog.value = false },
-        confirmButton = {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = {
-                              if(itemName.value.isNotBlank()) {
-                                  val newItem = Item(
-                                      1,
-                                      itemName.value,
-                                      itemQuantity.value.toInt(),
-                                      false
-                                  )
-                                  itemList += newItem
-                                  itemName.value = ""
-                                  itemQuantity.value = ""
-                              }
-                    },
-                ) {
-                    Text(text = "Add")
-                }
-
-                Button(
-                    onClick = { showDialog.value = false },
-                ) {
-                    Text(text = "Cancel")
-                }
-            }
-        },
-        title = { Text(text = "Add Shopping item")},
-        text = {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                OutlinedTextField(value = itemName.value,
-                    onValueChange = { itemName.value = it },
-                    label = { Text(text = "Enter item name") }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(value = itemQuantity.value,
-                    onValueChange = { itemQuantity.value = it },
-                    label = { Text(text = "Enter quantity") }
-                )
-            }
-        }
-    )
 }
 
 
@@ -180,16 +166,20 @@ fun ItemCard(
             .fillMaxWidth()
             .padding(8.dp)
             .border(
-                BorderStroke(3.dp, Color.Green),
+                BorderStroke(2.dp, Color.Blue),
                 shape = RoundedCornerShape(20)
             )
+            .height(60.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = "${item.itemName}          Qty: ${item.quantity}", Modifier.padding(8.dp))
-        IconButton(onClick = { onEditClick }) {
-            Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit item")
-        }
-        IconButton(onClick = { onDeleteClick }) {
-            Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete item")
+        Row {
+            IconButton(onClick = { onEditClick }) {
+                Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit item")
+            }
+            IconButton(onClick = { onDeleteClick }) {
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete item")
+            }
         }
     }
 }
